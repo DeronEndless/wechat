@@ -19,8 +19,8 @@ app.use(async (ctx, next) => {
         let timeStamp = ctx.query.timeStamp
         let ecostr = ctx.query.ecostr
         let tmpStr = [token, timeStamp, nonce].sort().join('')
-        let tmpStr = sha1(tmpStr)
-        if (tmpStr === signature) {
+        let shaStr = sha1(tmpStr)
+        if (shaStr === signature) {
             ctx.body = ecostr + ''
         } else {
             ctx.body = 'error'
