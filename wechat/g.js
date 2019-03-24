@@ -4,8 +4,8 @@ const Wechat = require('./wechat')
 const util = require('./util')
 
 module.exports = function (opts) {
-  let wechat = new Wechat(opts)
-  return async ctx => {
+  // let wechat = new Wechat(opts)
+  return async (ctx, next) => {
     try {
       console.log('ctx.query', ctx.query)
       let token = opts.token
@@ -38,27 +38,12 @@ module.exports = function (opts) {
         console.log('content', content)
         // json转key vlaue
         let message = util.formetMessage(content.xml)
-
         console.log('message', message)
 
-        if (message.MsgType === 'event') {
-          if (message.Event === 'subscribe') {
-            let now = new Date().getTime()
+        ctx.wechat = message
+        await handler.call(ctx, next)
+        Wechat.reply.call(ctx)
 
-            ctx.status = 200
-            ctx.type = 'application/xml'
-            ctx.body = `
-              <xml>
-                <ToUserName><![CDATA[${message.FromUserName}]]></ToUserName>
-                <FromUserName><![CDATA[${message.ToUserName}]]></FromUserName>
-                <CreateTime>${now}</CreateTime>
-                <MsgType><![CDATA[text]]></MsgType>
-                <Content><![CDATA[Hi Deron I Love You]]></Content>
-              </xml>
-            `
-            return 
-          }
-        }
       }
 
     } catch (err) {

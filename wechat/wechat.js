@@ -1,5 +1,6 @@
 const Promise = require('bluebird')
 const request = Promise.promisify(require('request'))
+const util = require('./util')
 const prefix = 'https://api.weixin.qq.com/cgi-bin/token'
 const api = {
   accessToken: `${prefix}?grant_type=client_credential`
@@ -18,13 +19,15 @@ function Wechat(opts) {
       return that.updataAccessToken()
     }
     if (that.isValidAccessToken(data)) {
-      that.access_token = data.access_token
-      that.expires_in = data.expires_in
-      console.log('accessToken Data', data)
-      that.saveAccessToken(data)
+      return Promise.resolve(data)
     } else {
       return that.updataAccessToken()
     }
+  }).then(data => {
+    that.access_token = data.access_token
+    that.expires_in = data.expires_in
+    console.log('accessToken Data', data)
+    that.saveAccessToken(data)
   })
 }
 Wechat.prototype.isValidAccessToken = function (data) {
@@ -41,6 +44,7 @@ Wechat.prototype.isValidAccessToken = function (data) {
     return false
   }
 }
+
 Wechat.prototype.updataAccessToken = function (data) {
   let appId = this.appId
   let appSecret = this.appSecret
@@ -58,5 +62,15 @@ Wechat.prototype.updataAccessToken = function (data) {
       resolve(data)
     })
   })
+}
+
+Wechat.prototype.reply = function () {
+  let content = this.body
+  let message = this.wechat
+  let xml = util.tpl(content, message)
+  
+  this.status = 200
+  this.type = 'application/xml'
+  this.body = xml
 }
 module.exports = Wechat
